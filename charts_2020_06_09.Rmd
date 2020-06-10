@@ -42,8 +42,9 @@ ggplot(data = nyc_ridership, mapping=aes(x=trip_day)) +
   geom_line(mapping =aes(y=ridership_average_31), color= "blue") +
   ggtitle("NYC Daily Citibike Trip Counts with 31 Day Moving Average") +
   scale_y_continuous(label=comma) +
-  theme(plot.title = element_text(hjust=0.5),
-        axis.title = element_blank())
+  theme(plot.title = element_text(hjust=0.5, color = "white"),
+        axis.title = element_blank()
+        )
 ```
 ```{r}
 ggplot(data = nyc_ridership, mapping=aes(x=trip_day)) +
@@ -52,17 +53,19 @@ ggplot(data = nyc_ridership, mapping=aes(x=trip_day)) +
   ggtitle("NYC Daily Citibike Trip Counts with 7 Day Moving Average") +
   scale_y_continuous(label=comma) +
   theme(plot.title = element_text(hjust=0.5),
-        axis.title = element_blank())
+        axis.title = element_blank()
+        )
 ```
 
 ```{r}
 ggplot(data = nyc_ridership, mapping=aes(x=trip_day)) +
   geom_line(mapping = aes(y=mean_trip_length), color = "orange") +
   geom_line(mapping =aes(y=trip_length_moving_average_7), color= "blue") +
-  ggtitle("NYC Daily Citibike Trip Mean Trip Length with 31 Day Moving Average") +
+  ggtitle("NYC Daily Citibike Trip Mean Trip Length with 7 Day Moving Average") +
   scale_y_continuous(label=comma, limits=c(0,2200)) +
   theme(plot.title = element_text(hjust=0.5),
-        axis.title = element_blank())
+        axis.title = element_blank()
+        )
 ```
 ```{r}
 ggplot(data = nyc_ridership, mapping=aes(x=trip_day)) +
