@@ -5,11 +5,21 @@ csvs <- !str_detect(file_list,"zip")
 csvs <- file_list[csvs] 
 csvs <- paste0("raw_data/",csvs)
 
+if("trips_data_by_day.csv" %in% list.files()){
+  unlink("trips_data_by_day.csv")
+}
+
 for (csv_path in csvs){
   print(csv_path)
   data <- read_csv(csv_path)
   names(data) <- tolower(str_replace_all(names(data)," ",""))
-  data$trip_day <- as.Date(data$starttime,"%Y-%m-%d %H:%M:%S")
+  data$starttime <- str_match(data$starttime,"(.*)\\s.*")[,2]
+  if (str_detect(data$starttime[1],"/")){
+    data$trip_day <- as.Date(data$starttime,"%m/%d/%Y")
+  }
+  else {
+    data$trip_day <- as.Date(data$starttime,"%Y-%m-%d")  
+  }
   data <- data %>%
     select(
       trip_day,

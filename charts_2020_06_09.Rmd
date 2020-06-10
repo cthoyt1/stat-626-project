@@ -1,0 +1,53 @@
+---
+title: "Charts_for_2020_06_09"
+output: html_document
+---
+
+```{r}
+# Load the data
+library(tidyverse)
+library(astsa)
+library(scales)
+ridership <- read_csv("trips_data_by_day.csv", 
+                col_names = c(
+                  "trip_day",
+                  "trip_count",
+                  "mean_trip_length",
+                  "trip_hours",
+                  "city"
+                ),
+                col_types=cols(
+                  trip_day = col_date(),
+                  trip_count = col_integer(),
+                  mean_trip_length = col_double(),
+                  trip_hours = col_double(),
+                  city = col_character()
+                ))
+```
+
+```{r}
+nyc_ridership <- ridership %>% filter(city == "NYC")
+nyc_ridership$ridership_average_7 <- stats::filter(nyc_ridership$trip_count, sides=2, filter=rep(1/7,7))
+nyc_ridership$ridership_average_31 <- stats::filter(nyc_ridership$trip_count, sides=2, filter=rep(1/31,31))
+```
+
+```{r}
+ggplot(data = nyc_ridership, mapping=aes(x=trip_day)) +
+  geom_line(mapping = aes(y=trip_count), color = "orange") +
+  geom_line(mapping =aes(y=ridership_average_31), color= "blue") +
+  ggtitle("NYC Daily Citibike Trip Counts with 31 Day Moving Average") +
+  scale_y_continuous(label=comma) +
+  theme(plot.title = element_text(hjust=0.5),
+        axis.title = element_blank())
+```
+```{r}
+ggplot(data = nyc_ridership, mapping=aes(x=trip_day)) +
+  geom_line(mapping = aes(y=trip_count), color = "orange") +
+  geom_line(mapping =aes(y=ridership_average_7), color= "blue") +
+  ggtitle("NYC Daily Citibike Trip Counts with 7 Day Moving Average") +
+  scale_y_continuous(label=comma) +
+  theme(plot.title = element_text(hjust=0.5),
+        axis.title = element_blank())
+```
+
+
