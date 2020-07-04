@@ -3,26 +3,29 @@ title: "Charts_for_2020_06_09"
 output: html_document
 ---
 
-```{r}
+```{r message=FALSE, echo=FALSE}
 # Load the data
+defaultW <- getOption("warn") #turn off the warnings
+options(warn = -1) #turn off all warnings
+library(readr)
 library(tidyverse)
 library(astsa)
 library(scales)
 ridership <- read_csv("trips_data_by_day.csv", 
-                col_names = c(
-                  "trip_day",
-                  "trip_count",
-                  "mean_trip_length",
-                  "trip_hours",
-                  "city"
-                ),
-                col_types=cols(
-                  trip_day = col_date(),
-                  trip_count = col_integer(),
-                  mean_trip_length = col_double(),
-                  trip_hours = col_double(),
-                  city = col_character()
-                ))
+                      col_names = c(
+                        "trip_day",
+                        "trip_count",
+                        "mean_trip_length",
+                        "trip_hours",
+                        "city"
+                      ),
+                      col_types=cols(
+                        trip_day = col_date(),
+                        trip_count = col_integer(),
+                        mean_trip_length = col_double(),
+                        trip_hours = col_double(),
+                        city = col_character()
+                      ))
 ```
 
 ```{r}
@@ -44,7 +47,7 @@ ggplot(data = nyc_ridership, mapping=aes(x=trip_day)) +
   scale_y_continuous(label=comma) +
   theme(plot.title = element_text(hjust=0.5, color = "white"),
         axis.title = element_blank()
-        )
+  )
 ```
 ```{r}
 ggplot(data = nyc_ridership, mapping=aes(x=trip_day)) +
@@ -54,7 +57,7 @@ ggplot(data = nyc_ridership, mapping=aes(x=trip_day)) +
   scale_y_continuous(label=comma) +
   theme(plot.title = element_text(hjust=0.5),
         axis.title = element_blank()
-        )
+  )
 ```
 
 ```{r}
@@ -65,7 +68,7 @@ ggplot(data = nyc_ridership, mapping=aes(x=trip_day)) +
   scale_y_continuous(label=comma, limits=c(0,2200)) +
   theme(plot.title = element_text(hjust=0.5),
         axis.title = element_blank()
-        )
+  )
 ```
 ```{r}
 ggplot(data = nyc_ridership, mapping=aes(x=trip_day)) +
@@ -94,3 +97,49 @@ ggplot(data = nyc_ridership, mapping=aes(x=trip_day)) +
   theme(plot.title = element_text(hjust=0.5),
         axis.title = element_blank())
 ```
+
+
+options(warn = defaultW)
+
+
+```{r}
+
+y=log(nyc_ridership$trip_count)  #y = log transformation
+n=length(y)
+#difference
+dy = y[2:n] - y[1:(n-1)] #y[t] - y[t-1]
+dy = c(0,dy)
+#plot(x=1:n, y=dy)
+
+ggplot(data = nyc_ridership, mapping=aes(x=trip_day)) +
+  #geom_line(mapping = aes(y=trip_hours), color = "orange") +
+  geom_line(mapping=aes(y=dy), color= "blue") +
+  ggtitle("NYC Daily Citibike Total Trip Counts with Diff'ed 1-day") +
+  scale_y_continuous(label=comma) +
+  theme(plot.title = element_text(hjust=0.5),
+        axis.title = element_blank())
+
+```
+
+```{r}
+a = acf(y)
+da = acf(dy)
+#pa=pacf(y)
+#pady=pacf(dy)
+
+#ggplot that shows both acf(y) and acf(dy)
+ggplot(data = NULL, mapping=aes(x=a$lag)) +
+  geom_line(mapping = aes(y=da$acf), color = "orange") +
+  geom_line(mapping =aes(y=a$acf), color= "blue") +
+  ggtitle("ACF of NYC Daily Citibike Total Trip") +
+  scale_y_continuous(label=comma) +
+  theme(plot.title = element_text(hjust=0.5),
+        axis.title = element_blank())
+
+#positive correlated intervals every 7 lags = seasonality
+
+
+```
+
+
+
