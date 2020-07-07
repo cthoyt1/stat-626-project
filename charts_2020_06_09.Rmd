@@ -149,6 +149,38 @@ acf_log_trip_count <- acf(nyc_ridership$log_trip_count, lag.max = 36)
 ```{r}
 acf_differenced_log_trip_count = acf(differenced_log_trip_count, lag.max = 36)
 ```
+```{r}
+attach(nyc_ridership)
 
+tsplot(x=trip_day, y=trip_count/1000, main="NYC Total Daily Trips: KSmooth Transformation", col="orange", lwd=2, ylab = "Number of Trips/1000")
+lines(ksmooth(x=trip_day, y=trip_count/1000, "normal", bandwidth = 12), col="blue", lwd=2)
+
+detach()
+```
+
+```{r}
+pacf_differenced_log_trip_count = pacf(differenced_log_trip_count, lag.max = 36)
+```
+
+```{r}
+pacf_log_trip_count <- pacf(nyc_ridership$log_trip_count, lag.max = 36)
+```
+
+
+```{r}
+attach(nyc_ridership)
+
+tsplot(x=trip_day, y=trip_count/1000, main="NYC Total Daily Trips: KSmooth Transformation", col="orange", lwd=2, ylab = "Number of Trips/1000")
+lines(ksmooth(x=trip_day, y=trip_count/1000, "normal", bandwidth = 12), col="blue", lwd=2)
+
+detach()
+```
+
+```{r}
+attach(nyc_ridership)
+trips.yw <- ar.yw(trip_day, order=7)
+nyc_ts <- ts(nyc_ridership)
+tsplot(y=trip_count, x=trip_day, col="orange", main="Yule Walker Series")
+```
 
 
