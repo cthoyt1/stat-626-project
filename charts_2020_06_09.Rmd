@@ -55,6 +55,7 @@ nyc_ridership <- ridership %>%
     , ridership_average_31 = stats::filter(nyc_ridership$trip_count, sides=2, filter=rep(1/31,31))
     , day_of_week = weekdays(as.Date(trip_day))
     , weekend = if_else(day_of_week %in% c('Saturday','Sunday'),1,0)
+    , days_line = trip_day - min(trip_day)
   )
 ```
 
@@ -182,7 +183,94 @@ pairs(~ trip_count + TMAX + TMIN)
 pairs(~ trip_count + PRCP + weekend)
 pairs(~ AWND + SNOW + SNWD)
 
-check_day <- nyc_ridership
+```{r}
+check_day <- nyc_ridership %>%
+  group_by(day_of_week) %>%
+  summarise(mean_trips = mean(trip_count/1000))
+
+ggplot(data=check_day) +
+  geom_bar(mapping = aes(x=day_of_week, y=mean_trips), stat="identity", color = "blue", fill="blue", alpha=0.5) +
+  ggtitle("Average Trips by Weekday") +
+  ylab("Average Number of Trips (1000s)") +
+  theme(plot.title = element_text(hjust=0.5)
+        , axis.title.x = element_blank())
+```
+
+
+
+```{r}
+model_data <- nyc_ridership %>% select(trip_count, AWND, PRCP, SNOW, SNWD, TMAX, TMIN, WDF2, WDF5, WSF2, WSF5, weekend, days_line)
+
+model_data$AWND[is.na(model_data$AWND)] <- 0
+model_data$PRCP[is.na(model_data$PRCP)] <- 0
+model_data$SNOW[is.na(model_data$SNOW)] <- 0
+model_data$SNWD[is.na(model_data$SNWD)] <- 0
+model_data$TMAX[is.na(model_data$TMAX)] <- 0
+model_data$TMIN[is.na(model_data$TMIN)] <- 0
+model_data$WDF2[is.na(model_data$WDF2)] <- 0
+model_data$WDF5[is.na(model_data$WDF5)] <- 0
+model_data$WSF2[is.na(model_data$WSF2)] <- 0
+model_data$WSF5[is.na(model_data$WSF5)] <- 0
+model_data$weekend[is.na(model_data$weekend)] <- 0
+model_data$days_line[is.na(model_data$days_line)] <- 0
+```
+
+```{r}
+lmMod <- lm(trip_count ~ . , data = model_data)
+selectedMod <- step(lmMod)
+linear_models <- summary(selectedMod)
+```
+
+```{r}
+ggplot(mapping = aes(y=linear_models$residuals, x=nyc_ridership$trip_day)) +
+  geom_line(color = "red", alpha=0.25) +
+  geom_smooth(method="loess", color="red", span = 0.1) +
+  ggtitle("Linear Model Residual Plot") +
+  scale_y_continuous(labels = scales::comma) +
+  theme(plot.title = element_text(hjust=0.5)
+        , axis.title.x = element_blank()
+        , axis.title.y = element_blank())
+```
+
+```{r}
+ggplot() +
+  geom_density(mapping = aes(x=linear_models$residuals), color="black") +
+  geom_histogram(mapping = aes(x=linear_models$residuals, y = ..density..), alpha=0.25, color = "red", fill = "red") +
+  geom_rug(aes(x = linear_models$residuals, y = 0), color = "red", aes=0.1) +
+  ggtitle("Histogram of Residuals") +
+  scale_x_continuous(label=scales::comma) +
+  theme(
+    plot.title = element_text(hjust = 0.5)
+    , axis.title.y = element_blank()
+    , axis.text.y = element_blank()
+    , axis.title.x = element_blank()
+  )
+```
+
+```{r}
+lmMod <- lm(trip_count ~ . , data = model_data)
+selectedMod <- step(lmMod)
+summary(selectedMod)
+```
+
+```{r}
+fitted <- selectedMod$fitted.values
+```
+
+```{r}
+ggplot(mapping = aes(x=nyc_ridership$trip_day)) +
+  geom_line(mapping = aes(y=nyc_ridership$trip_count), color = "blue", alpha=0.3) +
+  geom_smooth(mapping = aes(y=nyc_ridership$trip_count), method="loess", color = "blue", span = 0.1) +
+  geom_line(mapping=aes(y=fitted), color = "red", alpha = 0.3) +
+  geom_smooth(mapping = aes(y=fitted), method="loess", color = "red", span = 0.1) +
+  ggtitle("Predicted vs Actual Trips") +
+  scale_y_continuous(labels = scales::comma) +
+  ylab("Daily Trip Counts") +
+  theme(plot.title = element_text(hjust=0.5),
+        axis.title.x = element_blank())
+```
+
+
 
 
 
