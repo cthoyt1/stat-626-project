@@ -259,18 +259,47 @@ fitted <- selectedMod$fitted.values
 
 ```{r}
 ggplot(mapping = aes(x=nyc_ridership$trip_day)) +
-  geom_line(mapping = aes(y=nyc_ridership$trip_count), color = "blue", alpha=0.3) +
-  geom_smooth(mapping = aes(y=nyc_ridership$trip_count), method="loess", color = "blue", span = 0.1) +
-  geom_line(mapping=aes(y=fitted), color = "red", alpha = 0.3) +
-  geom_smooth(mapping = aes(y=fitted), method="loess", color = "red", span = 0.1) +
+  geom_line(mapping = aes(y=nyc_ridership$trip_count, alpha = 'Ride Counts', color = 'Ride Counts')) +
+  geom_smooth(mapping = aes(y=nyc_ridership$trip_count, alpha = 'Smoothed Ride Counts', color = 'Smoothed Ride Counts'), method="loess", span = 0.1) +
+  geom_line(mapping=aes(y=fitted, alpha = 'Predictions', color = 'Predictions')) +
+  geom_smooth(mapping = aes(y=fitted, alpha = 'Smoothed Predictions', color = 'Smoothed Predictions'), method="loess", span = 0.1) +
   ggtitle("Predicted vs Actual Trips") +
   scale_y_continuous(labels = scales::comma) +
   ylab("Daily Trip Counts") +
+  scale_colour_manual(name = "",values = c('Ride Counts'='blue', 'Smoothed Ride Counts'='blue', 'Predictions' = 'red', 'Smoothed Predictions' = 'red')) +
+  scale_alpha_manual(name="",values = c('Ride Counts'=0.3, 'Smoothed Ride Counts' = 1, 'Predictions' = 0.3, 'Smoothed Predictions' = 1)) +
   theme(plot.title = element_text(hjust=0.5),
-        axis.title.x = element_blank())
+        axis.title.x = element_blank(),
+        legend.position = "bottom",
+        legend.background = element_rect(fill='white'),
+        legend.key = element_rect(fill="white"))
 ```
+ggplot(data = df, 
+       mapping = aes(x = x)) + 
+
+  # specify fill for bar / color for line inside aes(); you can use
+  # whatever label you wish to appear in the legend
+  geom_col(aes(y = y.bar, fill = "bar.label")) +
+  geom_line(aes(y = y.line, color = "line.label")) +
+
+  xlab("Month of year") + 
+  scale_y_continuous(name = "Daily classifications per Spotter") + 
+
+  # the labels must match what you specified above
+  scale_fill_manual(name = "", values = c("bar.label" = "grey")) +
+  scale_color_manual(name = "", values = c("line.label" = "black")) +
+
+  theme_bw()
 
 
 
+ggplot()+geom_ribbon(data=ribbon,aes(ymin=min,ymax=max,x=x.ribbon,fill='lightgreen'))+
+    geom_line(data=ribbon,aes(x=x.ribbon,y=avg,color='black'))+
+    geom_line(data=data,aes(x=x,y=new.data,color='red'))+
+    xlab('x')+ylab('density') + 
+    scale_fill_identity(name = 'the fill', guide = 'legend',labels = c('m1')) +
+    scale_colour_manual(name = 'the colour', 
+         values =c('black'='black','red'='red'), labels = c('c2','c1'))
+         
 
 
