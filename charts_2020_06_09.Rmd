@@ -11,6 +11,9 @@ library(readr)
 library(tidyverse)
 library(astsa)
 library(scales)
+library(ggplot2)
+library(caret)
+library(e1071)
 ridership <- read_csv("trips_data_by_day.csv", 
                       col_names = c(
                         "trip_day",
@@ -28,8 +31,6 @@ ridership <- read_csv("trips_data_by_day.csv",
                       ))
 
 weather  <- read_csv("noaa_weather_central_park.csv")
-
-summary(weather)
 ```
 
 ```{r}
@@ -51,8 +52,8 @@ nyc_ridership <- ridership %>%
     , WSF5
   ) %>%
   mutate(
-    ridership_average_7 = stats::filter(nyc_ridership$trip_count, sides=2, filter=rep(1/7,7))
-    , ridership_average_31 = stats::filter(nyc_ridership$trip_count, sides=2, filter=rep(1/31,31))
+    ridership_average_7 = stats::filter(trip_count, sides=2, filter=rep(1/7,7))
+    , ridership_average_31 = stats::filter(trip_count, sides=2, filter=rep(1/31,31))
     , day_of_week = weekdays(as.Date(trip_day))
     , weekend = if_else(day_of_week %in% c('Saturday','Sunday'),1,0)
     , days_line = trip_day - min(trip_day)
@@ -129,16 +130,6 @@ detach()
 pacf_differenced_log_trip_count = pacf(differenced_log_trip_count, lag.max = 36)
 ```
 
-
-```{r}
-attach(nyc_ridership)
-trips.yw <- ar.yw(trip_day, order=7)
-nyc_ts <- ts(nyc_ridership)
-tsplot(y=trip_count, x=trip_day, col="orange", main="Yule Walker Series")
-
-detach()
-```
-
 ```{r}
 par(mfrow=c(3,1 ))
     
@@ -176,12 +167,6 @@ ggplot() +
     , axis.text.y = element_blank()
   )
 ```
-
-
-
-pairs(~ trip_count + TMAX + TMIN)
-pairs(~ trip_count + PRCP + weekend)
-pairs(~ AWND + SNOW + SNWD)
 
 ```{r}
 check_day <- nyc_ridership %>%
@@ -274,32 +259,28 @@ ggplot(mapping = aes(x=nyc_ridership$trip_day)) +
         legend.background = element_rect(fill='white'),
         legend.key = element_rect(fill="white"))
 ```
-ggplot(data = df, 
-       mapping = aes(x = x)) + 
-
-  # specify fill for bar / color for line inside aes(); you can use
-  # whatever label you wish to appear in the legend
-  geom_col(aes(y = y.bar, fill = "bar.label")) +
-  geom_line(aes(y = y.line, color = "line.label")) +
-
-  xlab("Month of year") + 
-  scale_y_continuous(name = "Daily classifications per Spotter") + 
-
-  # the labels must match what you specified above
-  scale_fill_manual(name = "", values = c("bar.label" = "grey")) +
-  scale_color_manual(name = "", values = c("line.label" = "black")) +
-
-  theme_bw()
 
 
+```{r}
+attach(nyc_ridership)
+nyc_ridership$square_trip_count <- nyc_ridership$trip_count^0.6
+differenced_square_trip_count <- diff(nyc_ridership$square_trip_count)
+row_count <- length(log_trip_count)
 
-ggplot()+geom_ribbon(data=ribbon,aes(ymin=min,ymax=max,x=x.ribbon,fill='lightgreen'))+
-    geom_line(data=ribbon,aes(x=x.ribbon,y=avg,color='black'))+
-    geom_line(data=data,aes(x=x,y=new.data,color='red'))+
-    xlab('x')+ylab('density') + 
-    scale_fill_identity(name = 'the fill', guide = 'legend',labels = c('m1')) +
-    scale_colour_manual(name = 'the colour', 
-         values =c('black'='black','red'='red'), labels = c('c2','c1'))
-         
+ggplot(mapping=aes(x=trip_day[2:row_count])) +
+  geom_line(mapping=aes(y=differenced_square_trip_count), color= "blue") +
+  ggtitle("NYC Daily Citibike Total Trip Counts: Box-Cox Transformation, ") +
+  # scale_y_continuous(label=percent) +
+  theme(plot.title = element_text(hjust=0.5),
+        axis.title = element_blank())
+
+pacf(differenced_square_trip_count, lag.max = 24)
+acf(differenced_square_trip_count, lag.max = 24)
+
+detach(nyc_ridership)
+```
+```{r}
+boxes <- caret::BoxCoxTrans(nyc_ridership$trip_count)
+```
 
 
